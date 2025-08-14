@@ -50,6 +50,73 @@ test_that("new_deposit_dataset() fails when required columns are missing", {
   )
 })
 
+test_that("new_deposit_dataset() fails with invalid window_size", {
+  df_ok <- data.frame(
+    customer_id = rep(c("C1", "C2"), each = 3),
+    date = rep(seq.Date(Sys.Date() - 2, Sys.Date(), by = "day"), 2),
+    amount = c(100, 102, 104, 95, 97, 99)
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 0, z_thresh = 2),
+    regexp = "window_size must be a positive integer",
+    ignore.case = TRUE
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = -5, z_thresh = 2),
+    regexp = "window_size must be a positive integer",
+    ignore.case = TRUE
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = "three", z_thresh = 2),
+    regexp = "window_size must be a positive integer",
+    ignore.case = TRUE
+  )
+})
+
+test_that("new_deposit_dataset() fails with invalid z_thresh", {
+  df_ok <- data.frame(
+    customer_id = rep(c("C1", "C2"), each = 3),
+    date = rep(seq.Date(Sys.Date() - 2, Sys.Date(), by = "day"), 2),
+    amount = c(100, 102, 104, 95, 97, 99)
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 3, z_thresh = 0),
+    regexp = "z_thresh must be a positive number",
+    ignore.case = TRUE
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 3, z_thresh = -2),
+    regexp = "z_thresh must be a positive number",
+    ignore.case = TRUE
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 3, z_thresh = "two"),
+    regexp = "z_thresh must be a positive number",
+    ignore.case = TRUE
+  )
+})
+
+test_that("new_deposit_dataset() creates a deposit_dataset object with valid input", {
+  df_ok <- data.frame(
+    customer_id = rep(c("C1", "C2"), each = 3),
+    date = rep(seq.Date(Sys.Date() - 2, Sys.Date(), by = "day"), 2),
+    amount = c(100, 102, 104, 95, 97, 99)
+  )
+
+  result <- new_deposit_dataset(df_ok, window_size = 3, z_thresh = 2)
+
+  expect_s3_class(result, "deposit_dataset")
+  expect_equal(result$window_size, 3)
+  expect_equal(result$z_thresh, 2)
+  expect_equal(nrow(result$transactions), 6)
+})
+
 
 
 
