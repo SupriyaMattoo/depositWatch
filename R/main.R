@@ -84,36 +84,83 @@ new_deposit_dataset <- function(transactions,
 #' summary(ds)
 detect_anomalies.deposit_dataset <- function(obj) {
 
-  results <- obj$transactions %>%
+  # Aggregate daily totals and counts per customer-date
+  daily_data <- obj$transactions %>%
+    dplyr::group_by(customer_id, date) %>%
+    dplyr::summarise(
+      daily_total = sum(amount, na.rm = TRUE),
+      transaction_count = dplyr::n(),
+      .groups = "drop_last"
+    ) %>%
+    dplyr::arrange(customer_id, date)
+
+  # Apply rolling stats per customer
+  flagged_data <- daily_data %>%
     dplyr::group_by(customer_id) %>%
-    dplyr::arrange(date) %>%
     dplyr::group_modify(~ {
-      stats <- rollingStats(.x$amount, obj$window_size)
+      stats <- rollingStats(.x$daily_total, obj$window_size)
       .x$roll_mean <- stats$roll_mean
       .x$roll_sd   <- stats$roll_sd
-      .x$z_score   <- (.x$amount - .x$roll_mean) / .x$roll_sd
-      .x$flag      <- abs(.x$z_score) > obj$z_thresh
-      .x
-    }) %>%
-    dplyr::summarise(anomaly_count = sum(flag, na.rm = TRUE), .groups = "drop")
+      .x$z_score   <- (.x$daily_total - .x$roll_mean) / .x$roll_sd
 
-  obj$results <- results
-  obj
+      # Flag 1: More than usual
+      flag_amount <- abs(.x$z_score) > obj$z_thresh
+
+      # Flag 2: High frequency but not amount flag
+      flag_freq <- (!flag_amount) & (.x$transaction_count > obj$freq_thresh)
+
+      # Combine flags
+      .x$flag <- dplyr::case_when(
+        flag_amount & flag_freq ~ "Both",
+        flag_amount ~ "More than usual",
+        flag_freq ~ "High frequency",
+        TRUE ~ NA_character_
+      )
+
+      return(.x)  # <- Important! return the modified data frame
+    }) %>%
+    dplyr::ungroup()
+
+  # Summarise per customer: how many times flagged and which flags occurred
+  results <- flagged_data %>%
+    dplyr::group_by(customer_id) %>%
+    dplyr::summarise(
+      flag_count = sum(!is.na(flag)),
+      final_flag = paste(unique(stats::na.omit(flag)), collapse = ", "),
+      .groups = "drop"
+    )
+
+  # Store results in new object
+  new_obj <- obj
+  new_obj$results <- results
+
+  return(new_obj)
 }
+
 #detect_anomalies.deposit_dataset(ds)
 
 #' Summarize a deposit dataset
-#'
+#' @importFrom openxlsx write.xlsx
 #' @param object An object of class \code{deposit_dataset}.
 #' @param ... Additional arguments (ignored).
 #'
-#' @return Prints a summary table of anomalies per customer.
+#' @return Prints and exports a summary table of anomalies per customer.
 #' @export
 #' @method summary deposit_dataset
 #' @export
-summary.deposit_dataset <- function(obj) {
+summary.deposit_dataset <- function(obj, excel_path = NULL) {
   if (is.null(obj$results)) stop("Run detect_anomalies() first.")
+
   print(obj$results)
+
+  # Export to Excel if path is provided
+  if (!is.null(excel_path)) {
+    if (!requireNamespace("openxlsx", quietly = TRUE)) {
+      stop("Package 'openxlsx' required for Excel export. Please install it first.")
+    }
+    openxlsx::write.xlsx(obj$results, file = excel_path)
+    message("Results exported to Excel: ", excel_path)
+  }
 }
 
 

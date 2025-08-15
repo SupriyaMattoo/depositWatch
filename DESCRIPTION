@@ -22,7 +22,8 @@ Imports:
     dplyr,
     Rcpp,
     zoo,
-    magrittr
+    magrittr,
+    openxlsx
 Suggests: 
     knitr,
     rmarkdown,
