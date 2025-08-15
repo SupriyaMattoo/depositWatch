@@ -18,6 +18,7 @@ Computes rolling Z-scores and flags anomalous deposits for each customer.
 Requires a \code{deposit_dataset} object created by \code{new_deposit_dataset()}.
 }
 \examples{
+# Create a deposit dataset
 transactions <- data.frame(
   customer_id = rep(c("C1", "C2"), each = 5),
   date = rep(seq.Date(Sys.Date() - 4, Sys.Date(), by = "day"), 2),
@@ -25,6 +26,10 @@ transactions <- data.frame(
 )
 
 ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2)
-ds <- detect_anomalies(ds)
-summary(ds)
+
+# Detect anomalies (returns a new object)
+ds1 <- detect_anomalies(ds)
+
+# Print anomaly summary
+summary(ds1)
 }

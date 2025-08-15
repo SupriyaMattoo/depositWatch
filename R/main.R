@@ -73,6 +73,7 @@ new_deposit_dataset <- function(transactions,
 #' @method detect_anomalies deposit_dataset
 #'
 #' @examples
+#' # Create a deposit dataset
 #' transactions <- data.frame(
 #'   customer_id = rep(c("C1", "C2"), each = 5),
 #'   date = rep(seq.Date(Sys.Date() - 4, Sys.Date(), by = "day"), 2),
@@ -80,8 +81,13 @@ new_deposit_dataset <- function(transactions,
 #' )
 #'
 #' ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2)
-#' ds <- detect_anomalies(ds)
-#' summary(ds)
+#'
+#' # Detect anomalies (returns a new object)
+#' ds1 <- detect_anomalies(ds)
+#'
+#' # Print anomaly summary
+#' summary(ds1)
+
 detect_anomalies.deposit_dataset <- function(obj) {
 
   results <- obj$transactions %>%
@@ -97,8 +103,12 @@ detect_anomalies.deposit_dataset <- function(obj) {
     }) %>%
     dplyr::summarise(anomaly_count = sum(flag, na.rm = TRUE), .groups = "drop")
 
-  obj$results <- results
-  obj
+  # Create a new object with results
+  new_obj <- obj
+  new_obj$results <- results
+
+  # Return the modified object
+  return(new_obj)
 }
 #detect_anomalies.deposit_dataset(ds)
 
