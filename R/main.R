@@ -50,9 +50,9 @@ new_deposit_dataset <- function(transactions,
   )
 }
 
-#transactions <- read.csv("D:/EMBA/DATA501/Package/Deposits.csv", stringsAsFactors = FALSE)
 
-#head(transactions)
+
+
 
 #ds <- new_deposit_dataset(transactions)
 
@@ -123,9 +123,9 @@ detect_anomalies.deposit_dataset <- function(obj) {
 
   # Summarise per customer per month: how many times flagged and which flags occurred
   results <- flagged_data %>%
-    mutate(month = floor_date(date, "month")) %>%  # create month column
-    group_by(customer_id, month) %>%
-    summarise(
+    dplyr::mutate(month = lubridate::floor_date(date, "month")) %>%  # create month column
+    dplyr::group_by(customer_id, month) %>%
+    dplyr::summarise(
       flag_count = sum(!is.na(flag)),
       final_flag = paste(unique(na.omit(flag)), collapse = ", "),
       .groups = "drop"
@@ -191,23 +191,23 @@ plot_anomalies.deposit_dataset <- function(obj) {
 
   # Summarize per month across all customers
   results_monthly <- obj$results %>%
-    mutate(month = floor_date(date, "month")) %>%
+    dplyr::mutate(month = floor_date(month, "month")) %>%
     dplyr::group_by(month) %>%
     dplyr::summarise(
-      anomalies_count = sum(!is.na(flag)),
-      unique_customers = n_distinct(customer_id[!is.na(flag)]),
+      anomalies_count = sum(!is.na(final_flag)),
+      unique_customers = n_distinct(customer_id[!is.na(final_flag)]),
       .groups = "drop"
     )
 
   # Summarize per month and flag type
   results_monthly_flag <- obj$results %>%
-    mutate(month = floor_date(date, "month")) %>%
-    filter(!is.na(flag)) %>%
-    dplyr::group_by(month, flag) %>%
+    dplyr::mutate(month = floor_date(month, "month")) %>%
+    filter(!is.na(final_flag)) %>%
+    dplyr::group_by(month, final_flag) %>%
     dplyr::summarise(total_anomalies = n(), .groups = "drop")
 
   # Plot: total anomalies per month
-  p1 <-   ggplot(results_monthly_flag, aes(x = month, y = total_anomalies, fill = flag)) +
+  p1 <-   ggplot(results_monthly_flag, aes(x = month, y = total_anomalies, fill = final_flag)) +
     geom_col() +
     labs(title = "Total Monthly Anomalies by Flag Type",
          x = "Month", y = "Total Anomalies", fill = "Flag Type") +
