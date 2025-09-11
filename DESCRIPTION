@@ -23,7 +23,9 @@ Imports:
     Rcpp,
     zoo,
     magrittr,
-    openxlsx
+    openxlsx,
+    ggplot2,
+    lubridate
 Suggests: 
     knitr,
     rmarkdown,

@@ -121,12 +121,13 @@ detect_anomalies.deposit_dataset <- function(obj) {
     }) %>%
     dplyr::ungroup()
 
-  # Summarise per customer: how many times flagged and which flags occurred
+  # Summarise per customer per month: how many times flagged and which flags occurred
   results <- flagged_data %>%
-    dplyr::group_by(customer_id) %>%
-    dplyr::summarise(
+    mutate(month = floor_date(date, "month")) %>%  # create month column
+    group_by(customer_id, month) %>%
+    summarise(
       flag_count = sum(!is.na(flag)),
-      final_flag = paste(unique(stats::na.omit(flag)), collapse = ", "),
+      final_flag = paste(unique(na.omit(flag)), collapse = ", "),
       .groups = "drop"
     )
 
@@ -174,4 +175,63 @@ summary.deposit_dataset <- function(obj, excel_path = NULL) {
 #' @export
 detect_anomalies <- function(obj, ...) {
   UseMethod("detect_anomalies")
+}
+
+
+
+#' Plot monthly anomalies for a deposit_dataset object
+#'
+#' @param obj An object of class \code{deposit_dataset} with anomalies detected.
+#' @export
+#' @import ggplot2
+#' @importFrom lubridate floor_date
+#' @method plot_anomalies deposit_dataset
+plot_anomalies.deposit_dataset <- function(obj) {
+  if (is.null(obj$results)) stop("Run detect_anomalies() first.")
+
+  # Summarize per month across all customers
+  results_monthly <- obj$results %>%
+    mutate(month = floor_date(date, "month")) %>%
+    dplyr::group_by(month) %>%
+    dplyr::summarise(
+      anomalies_count = sum(!is.na(flag)),
+      unique_customers = n_distinct(customer_id[!is.na(flag)]),
+      .groups = "drop"
+    )
+
+  # Summarize per month and flag type
+  results_monthly_flag <- obj$results %>%
+    mutate(month = floor_date(date, "month")) %>%
+    filter(!is.na(flag)) %>%
+    dplyr::group_by(month, flag) %>%
+    dplyr::summarise(total_anomalies = n(), .groups = "drop")
+
+  # Plot: total anomalies per month
+  p1 <-   ggplot(results_monthly_flag, aes(x = month, y = total_anomalies, fill = flag)) +
+    geom_col() +
+    labs(title = "Total Monthly Anomalies by Flag Type",
+         x = "Month", y = "Total Anomalies", fill = "Flag Type") +
+    theme_minimal()
+
+  # Plot: unique customers with anomalies per month
+  p2 <- ggplot(results_monthly, aes(x = month, y = unique_customers)) +
+    geom_line(color = "blue") +
+    geom_point(color = "blue") +
+    labs(title = "Unique Customers with Anomalies per Month",
+         x = "Month", y = "Number of Customers") +
+    theme_minimal()
+
+  # Return plots as a list
+  list(total_anomalies = p1, unique_customers = p2)
+
+}
+
+
+#' Plot anomalies for a deposit dataset
+#'
+#' @param obj A \code{deposit_dataset} object with anomaly results
+#' @return A ggplot2 object (or list of ggplot2 objects)
+#' @export
+plot_anomalies <- function(obj) {
+  UseMethod("plot_anomalies")
 }
