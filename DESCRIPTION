@@ -25,7 +25,8 @@ Imports:
     magrittr,
     openxlsx,
     ggplot2,
-    lubridate
+    lubridate,
+    tidyr
 Suggests: 
     knitr,
     rmarkdown,
