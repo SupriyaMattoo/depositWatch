@@ -50,6 +50,7 @@ new_deposit_dataset <- function(transactions,
   )
 }
 
+<<<<<<< HEAD
 #transactions <- read.csv("D:/EMBA/DATA501/Package/Deposits.csv", stringsAsFactors = FALSE)
 
 #head(transactions)
@@ -125,16 +126,14 @@ summary.deposit_dataset <- function(obj) {
   if (is.null(obj$results)) stop("Run detect_anomalies() first.")
   print(obj$results)
 }
+=======
+>>>>>>> plots
 
 
 
-#' Detect anomalies generic
-#'
-#' Generic function for detecting anomalies in different objects.
-#'
-#' @param obj Object to detect anomalies on
-#' @param ... Additional arguments
-#' @export
-detect_anomalies <- function(obj, ...) {
-  UseMethod("detect_anomalies")
-}
+
+
+
+
+
+

@@ -1,11 +1,18 @@
 ---
-title: "my-vignette"
+title: "Introduction to depositWatch"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{Introduction to depositWatch}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+depositWatch is a package to detect Unusual Behaviour in customer deposit accounts Using Rolling Statistical Methods. Traditional Anti-Money Laundering (AML) systems often rely on static thresholds, rule-based alerts, or predefined risk models, which may fail to detect evolving or context-specific suspicious behaviours. depositWatch provides a more adaptive, data-streaming approach to anomaly detection.
+
+### Example
+A customer with a typical deposit pattern of $500/month over 2–3 transactions suddenly deposit $50,000 across five transactions. Although each transaction is under the typical reporting threshold, the overall pattern deviates significantly from their norm. Using a rolling Z-score and frequency analysis, such behaviour can be flagged for further review.
+This method is dynamic, customer-specific, and scalable, making it suitable for real-world banking applications
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -17,3 +24,34 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(depositWatch)
 ```
+### Objectives
+•	Detect unusual customer deposit behaviour dynamically
+•	Allow flexible, user-defined thresholds for anomaly detection
+•	Provide clear output for reporting, visualization, and further analysis
+•	Maintain scalability and efficiency for large datasets
+
+
+### Data
+The data should be a deposit transactions dataframe having there columns, customer_id, date and amount. 
+
+```{r load-data, echo=TRUE}
+data("transactions", package = "depositWatch")
+head(transactions)
+```
+
+### Functions
+The package has four functions:
+
+1. new_deposit_dataset(): This is an S3 constructer that takes a deposit dataset as input and converts it into a "deposit_dataset" class
+
+```{r Input}
+#ds = new_deposit_dataset(transactions)
+```
+
+
+2. detect_anomalies(): It takes a deposit_dataset object as input, which contains transaction-level data, and computes rolling statistics such as rolling mean and rolling standard deviation for each customer. The method flags anomalies using two criteria: the first is when a daily total deposit deviates significantly from the rolling mean, exceeding a user-defined Z-score threshold, and the second is when the number of transactions within a day exceeds a frequency threshold, even if the total amount is within normal limits. If both conditions are met simultaneously, the record is flagged as “Both.” The output is a new deposit_dataset object containing a summary of anomalies per customer, including the total count of flagged days and the types of flags encountered.
+
+```{r Results}
+
+```
+

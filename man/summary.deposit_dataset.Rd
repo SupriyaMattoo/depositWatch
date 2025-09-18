@@ -4,7 +4,7 @@
 \alias{summary.deposit_dataset}
 \title{Summarize a deposit dataset}
 \usage{
-\method{summary}{deposit_dataset}(obj)
+\method{summary}{deposit_dataset}(obj, excel_path = NULL)
 }
 \arguments{
 \item{object}{An object of class \code{deposit_dataset}.}
@@ -12,7 +12,7 @@
 \item{...}{Additional arguments (ignored).}
 }
 \value{
-Prints a summary table of anomalies per customer.
+Prints and exports a summary table of anomalies per customer.
 }
 \description{
 Summarize a deposit dataset
