@@ -2,19 +2,43 @@
 NULL
 
 
-#' Create a deposit dataset object
+#' Create a new deposit dataset object
 #'
-#' @param transactions A data frame of transaction records.
-#' @param window_size Rolling window size (default 30).
-#' @param z_thresh Z-score threshold for anomaly detection (default 3).
-#' @param freq_thresh Frequency threshold for anomaly detection (default 5).
+#' This function constructs an object of class \code{deposit_dataset}, which stores
+#' transaction data and parameters for anomaly detection. The object can be passed
+#' to other functions in the package (e.g., \code{detect_anomalies}) to run analyses.
 #'
-#' @return An object of class \code{deposit_dataset}.
+#' @param transactions A data frame of transaction records, with required columns:
+#'   \code{customer_id}, \code{date}, and \code{amount}.
+#' @param window_size Integer. Rolling window size for calculating moving statistics
+#'   (default = 30).
+#' @param z_thresh Numeric. Z-score threshold for identifying anomalous transaction
+#'   amounts (default = 3).
+#' @param freq_thresh Numeric. Z-score threshold for identifying anomalous transaction
+#'   frequencies (default = 3).
+#'
+#' @return An object of class \code{deposit_dataset}, containing:
+#' \itemize{
+#'   \item \code{transactions}: The input data frame.
+#'   \item \code{window_size}: Rolling window size.
+#'   \item \code{z_thresh}: Amount anomaly threshold.
+#'   \item \code{freq_thresh}: Frequency anomaly threshold.
+#'   \item \code{results}: Placeholder for results (initially \code{NULL}).
+#' }
+#'
+#' @examples
+#' transactions <- data.frame(
+#'   customer_id = rep(c("C1", "C2"), each = 5),
+#'   date = rep(seq.Date(Sys.Date() - 4, Sys.Date(), by = "day"), 2),
+#'   amount = c(100, 105, 102, 300, 250, 95, 98, 97, 99, 101)
+#' )
+#' ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thresh = 2)
+#'
 #' @export
 new_deposit_dataset <- function(transactions,
                                 window_size = 30,
                                 z_thresh = 3,
-                                freq_thresh = 5) {
+                                freq_thresh = 3) {
   # Check data is a data frame
   if (!is.data.frame(transactions)) {
     stop("transactions must be a data frame", call. = FALSE)
@@ -27,6 +51,17 @@ new_deposit_dataset <- function(transactions,
     stop("Missing required column(s): ", paste(missing_cols, collapse = ", "), call. = FALSE)
   }
 
+
+  # Check that date column is Date class
+  if (!inherits(transactions$date, "Date")) {
+    stop("The 'date' column must be of class Date. Use as.Date() to convert.", call. = FALSE)
+  }
+
+  # Check that amount column is numeric
+  if (!is.numeric(transactions$amount)) {
+    stop("The 'amount' column must be numeric.", call. = FALSE)
+  }
+
   # Check window_size
   if (!is.numeric(window_size) || length(window_size) != 1 || window_size <= 0) {
     stop("window_size must be a positive integer", call. = FALSE)
@@ -35,6 +70,11 @@ new_deposit_dataset <- function(transactions,
   # Check z_thresh
   if (!is.numeric(z_thresh) || length(z_thresh) != 1 || z_thresh <= 0) {
     stop("z_thresh must be a positive number", call. = FALSE)
+  }
+
+  # Check freq_thresh
+  if (!is.numeric(freq_thresh) || length(freq_thresh) != 1 || freq_thresh <= 0) {
+    stop("freq_thresh must be a positive number", call. = FALSE)
   }
 
   # Create and return object
@@ -50,84 +90,8 @@ new_deposit_dataset <- function(transactions,
   )
 }
 
-<<<<<<< HEAD
-#transactions <- read.csv("D:/EMBA/DATA501/Package/Deposits.csv", stringsAsFactors = FALSE)
-
-#head(transactions)
-
-#ds <- new_deposit_dataset(transactions)
-
-#otype(ds)
 
 
-# Detect anomalies method
-#' Detect anomalies in a deposit dataset
-#'
-#' Computes rolling Z-scores and flags anomalous deposits for each customer.
-#' Requires a `deposit_dataset` object created by `new_deposit_dataset()`.
-#'
-#' @param obj An object of class \code{deposit_dataset}.
-#'
-#' @return The same \code{deposit_dataset} object with a \code{results}
-#'   data frame containing the number of anomalies per customer.
-#' @export
-#' @method detect_anomalies deposit_dataset
-#'
-#' @examples
-#' # Create a deposit dataset
-#' transactions <- data.frame(
-#'   customer_id = rep(c("C1", "C2"), each = 5),
-#'   date = rep(seq.Date(Sys.Date() - 4, Sys.Date(), by = "day"), 2),
-#'   amount = c(100, 105, 102, 300, 250, 95, 98, 97, 99, 101)
-#' )
-#'
-#' ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2)
-#'
-#' # Detect anomalies (returns a new object)
-#' ds1 <- detect_anomalies(ds)
-#'
-#' # Print anomaly summary
-#' summary(ds1)
-
-detect_anomalies.deposit_dataset <- function(obj) {
-
-  results <- obj$transactions %>%
-    dplyr::group_by(customer_id) %>%
-    dplyr::arrange(date) %>%
-    dplyr::group_modify(~ {
-      stats <- rollingStats(.x$amount, obj$window_size)
-      .x$roll_mean <- stats$roll_mean
-      .x$roll_sd   <- stats$roll_sd
-      .x$z_score   <- (.x$amount - .x$roll_mean) / .x$roll_sd
-      .x$flag      <- abs(.x$z_score) > obj$z_thresh
-      .x
-    }) %>%
-    dplyr::summarise(anomaly_count = sum(flag, na.rm = TRUE), .groups = "drop")
-
-  # Create a new object with results
-  new_obj <- obj
-  new_obj$results <- results
-
-  # Return the modified object
-  return(new_obj)
-}
-#detect_anomalies.deposit_dataset(ds)
-
-#' Summarize a deposit dataset
-#'
-#' @param object An object of class \code{deposit_dataset}.
-#' @param ... Additional arguments (ignored).
-#'
-#' @return Prints a summary table of anomalies per customer.
-#' @export
-#' @method summary deposit_dataset
-#' @export
-summary.deposit_dataset <- function(obj) {
-  if (is.null(obj$results)) stop("Run detect_anomalies() first.")
-  print(obj$results)
-}
-=======
->>>>>>> plots
 
 
 

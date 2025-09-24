@@ -2,27 +2,49 @@
 % Please edit documentation in R/main.R
 \name{new_deposit_dataset}
 \alias{new_deposit_dataset}
-\title{Create a deposit dataset object}
+\title{Create a new deposit dataset object}
 \usage{
 new_deposit_dataset(
   transactions,
   window_size = 30,
   z_thresh = 3,
-  freq_thresh = 5
+  freq_thresh = 3
 )
 }
 \arguments{
-\item{transactions}{A data frame of transaction records.}
+\item{transactions}{A data frame of transaction records, with required columns:
+\code{customer_id}, \code{date}, and \code{amount}.}
 
-\item{window_size}{Rolling window size (default 30).}
+\item{window_size}{Integer. Rolling window size for calculating moving statistics
+(default = 30).}
 
-\item{z_thresh}{Z-score threshold for anomaly detection (default 3).}
+\item{z_thresh}{Numeric. Z-score threshold for identifying anomalous transaction
+amounts (default = 3).}
 
-\item{freq_thresh}{Frequency threshold for anomaly detection (default 5).}
+\item{freq_thresh}{Numeric. Z-score threshold for identifying anomalous transaction
+frequencies (default = 3).}
 }
 \value{
-An object of class \code{deposit_dataset}.
+An object of class \code{deposit_dataset}, containing:
+\itemize{
+\item \code{transactions}: The input data frame.
+\item \code{window_size}: Rolling window size.
+\item \code{z_thresh}: Amount anomaly threshold.
+\item \code{freq_thresh}: Frequency anomaly threshold.
+\item \code{results}: Placeholder for results (initially \code{NULL}).
+}
 }
 \description{
-Create a deposit dataset object
+This function constructs an object of class \code{deposit_dataset}, which stores
+transaction data and parameters for anomaly detection. The object can be passed
+to other functions in the package (e.g., \code{detect_anomalies}) to run analyses.
+}
+\examples{
+transactions <- data.frame(
+  customer_id = rep(c("C1", "C2"), each = 5),
+  date = rep(seq.Date(Sys.Date() - 4, Sys.Date(), by = "day"), 2),
+  amount = c(100, 105, 102, 300, 250, 95, 98, 97, 99, 101)
+)
+ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thresh = 2)
+
 }

@@ -1,15 +1,27 @@
-# Detect anomalies method
 #' Detect anomalies in a deposit dataset
 #'
-#' Computes rolling Z-scores and flags anomalous deposits for each customer.
-#' Requires a `deposit_dataset` object created by `new_deposit_dataset()`.
+#' Applies rolling statistical methods to identify anomalous deposit behavior
+#' per customer. Anomalies are flagged based on unusually large deviations
+#' in transaction amounts or unusually high transaction frequencies, relative
+#' to rolling averages. Requires a \code{deposit_dataset} object created
+#' by \code{\link{new_deposit_dataset}}.
 #'
-#' @param obj An object of class \code{deposit_dataset}.
+#' @param obj An object of class \code{deposit_dataset}, containing
+#'   transaction data and anomaly detection parameters.
 #'
-#' @return The same \code{deposit_dataset} object with a \code{results}
-#'   data frame containing the number of anomalies per customer.
-#' @export
-#' @method detect_anomalies deposit_dataset
+#' @return A \code{deposit_dataset} object with an added \code{results}
+#'   data frame summarising anomalies per customer per month, including:
+#'   \itemize{
+#'     \item \code{flag_count}: Number of anomaly flags raised.
+#'     \item \code{final_flag}: Type(s) of anomaly detected
+#'       ("More than usual", "High frequency", or "Both").
+#'   }
+#'
+#' @details
+#' The function computes rolling means and standard deviations for both
+#' transaction amounts and frequencies. Z-scores are then calculated and
+#' compared against the thresholds specified in the \code{deposit_dataset}
+#' object (\code{z_thresh} and \code{freq_thresh}).
 #'
 #' @examples
 #' transactions <- data.frame(
@@ -20,7 +32,12 @@
 #'
 #' ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thresh = 5)
 #' ds <- detect_anomalies(ds)
-#' summary(ds)
+#' ds$results
+#'
+#' @seealso \code{\link{new_deposit_dataset}}, \code{\link{plot.deposit_dataset}}
+#'
+#' @export
+#' @method detect_anomalies deposit_dataset
 detect_anomalies.deposit_dataset <- function(obj) {
 
   # Aggregate daily totals and counts per customer-date
@@ -37,16 +54,26 @@ detect_anomalies.deposit_dataset <- function(obj) {
   flagged_data <- daily_data %>%
     dplyr::group_by(customer_id) %>%
     dplyr::group_modify(~ {
-      stats <- rollingStats(.x$daily_total, obj$window_size)
-      .x$roll_mean <- stats$roll_mean
-      .x$roll_sd   <- stats$roll_sd
-      .x$z_score   <- (.x$daily_total - .x$roll_mean) / .x$roll_sd
 
-      # Flag 1: More than usual
-      flag_amount <- abs(.x$z_score) > obj$z_thresh
+      # Rolling stats for amounts
+      stats_amt <- rollingStats(.x$daily_total, obj$window_size)
+      .x$roll_mean_amt <- stats_amt$roll_mean
+      .x$roll_sd_amt   <- stats_amt$roll_sd
+      .x$z_score_amt   <- ifelse(.x$roll_sd_amt > 0,
+                                 (.x$daily_total - .x$roll_mean_amt) / .x$roll_sd_amt,0)
 
-      # Flag 2: High frequency but not amount flag
-      flag_freq <- (!flag_amount) & (.x$transaction_count > obj$freq_thresh)
+      # Rolling stats for transaction frequency
+      stats_freq <- rollingStats(.x$transaction_count, obj$window_size)
+      .x$roll_mean_freq <- stats_freq$roll_mean
+      .x$roll_sd_freq   <- stats_freq$roll_sd
+      .x$z_score_freq   <- ifelse(.x$roll_sd_freq > 0,
+                                  (.x$transaction_count - .x$roll_mean_freq) / .x$roll_sd_freq,0)
+
+      # Flag 1: Amount anomaly
+      flag_amount <- abs(.x$z_score_amt) > obj$z_thresh
+
+      # Flag 2: Frequency anomaly
+      flag_freq <- abs(.x$z_score_freq) > obj$freq_thresh
 
       # Combine flags
       .x$flag <- dplyr::case_when(

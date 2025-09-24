@@ -50,6 +50,36 @@ test_that("new_deposit_dataset() fails when required columns are missing", {
   )
 })
 
+
+test_that("new_deposit_dataset() fails when date is not of Date class", {
+  df_notdate <- data.frame(
+    customer_id = rep(c("C1", "C2"), each = 3),
+    date = c("01/02/2008", "02/02/2008", "02/02/2008", "03/02/2008",
+             "04/02/2008", "04/02/2008"),
+    amount = c(100, 102, 104, 95, 97, 99)
+  )
+  expect_error(
+    new_deposit_dataset(df_notdate, 3, 2),
+    regexp = "The 'date' column must be of class Date. Use as.Date() to convert.",
+    fixed = TRUE
+  )
+})
+
+
+test_that("new_deposit_dataset() fails when amount is not numeric", {
+  df_amountnotnumeric <- data.frame(
+    customer_id = rep(c("C1", "C2"), each = 3),
+    date = rep(seq.Date(Sys.Date() - 2, Sys.Date(), by = "day"), 2),
+    amount = c("a", "b", "c", "d", "e", "f")
+  )
+  expect_error(
+    new_deposit_dataset(df_amountnotnumeric, 3, 2),
+    regexp = "The 'amount' column must be numeric.",
+    fixed = TRUE
+  )
+})
+
+
 test_that("new_deposit_dataset() fails with invalid window_size", {
   df_ok <- data.frame(
     customer_id = rep(c("C1", "C2"), each = 3),
@@ -98,6 +128,33 @@ test_that("new_deposit_dataset() fails with invalid z_thresh", {
   expect_error(
     new_deposit_dataset(df_ok, window_size = 3, z_thresh = "two"),
     regexp = "z_thresh must be a positive number",
+    ignore.case = TRUE
+  )
+})
+
+
+test_that("new_deposit_dataset() fails with invalid freq_thresh", {
+  df_ok <- data.frame(
+    customer_id = rep(c("C1", "C2"), each = 3),
+    date = rep(seq.Date(Sys.Date() - 2, Sys.Date(), by = "day"), 2),
+    amount = c(100, 102, 104, 95, 97, 99)
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 3, freq_thresh = 0),
+    regexp = "freq_thresh must be a positive number",
+    ignore.case = TRUE
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 3, freq_thresh = -2),
+    regexp = "freq_thresh must be a positive number",
+    ignore.case = TRUE
+  )
+
+  expect_error(
+    new_deposit_dataset(df_ok, window_size = 3, freq_thresh = "two"),
+    regexp = "freq_thresh must be a positive number",
     ignore.case = TRUE
   )
 })
