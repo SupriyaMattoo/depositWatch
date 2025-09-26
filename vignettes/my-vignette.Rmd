@@ -82,6 +82,7 @@ ds1 <- summary(ds,excel_path = "anomaly_summary.xlsx")
 o	The total number of anomalies detected per calendar month.  
 o	The number of unique customers who experienced at least one anomaly per calendar month
 
+
 ```{r, eval=FALSE}
 plot(ds)
 ```
