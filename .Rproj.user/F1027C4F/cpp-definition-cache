@@ -1,0 +1,19 @@
+[
+    {
+        "file": "D:/EMBA/DATA501/Package/depositWatch/src/rolling_statistics.cpp",
+        "file_last_write": 1758610299.0,
+        "definitions": [
+            {
+                "usr": "c:@F@rollingStats#$@N@Rcpp@S@Vector>#VI14#@N@Rcpp@ST>1#T@PreserveStorage#I#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "rollingStats(Rcpp::NumericVector, int)",
+                "file": "D:/EMBA/DATA501/Package/depositWatch/src/rolling_statistics.cpp",
+                "line": 15,
+                "column": 11,
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    }
+]

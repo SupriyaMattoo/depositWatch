@@ -1,0 +1,100 @@
+# Step 0. a
+library(usethis)
+library(devtools)
+library(roxygen2)
+library(testthat)
+library(sloop)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+#install.packages("lubridate")
+
+# Step 0. b
+use_r("hello.R")
+use_r("zzz.R")
+use_r("main.R")    # rename the package
+use_package("Rcpp",type="LinkingTo")
+usethis::use_roxygen_md()
+usethis::use_package("dplyr")
+usethis::use_package("zoo")
+usethis::use_rcpp()
+
+# Step 0. c
+use_rcpp()
+# Gives an error: !open file must code (but we will ignore this for now)
+
+
+# Step 1
+# Create a namespace (We don't want to ever edit this file manually)
+devtools::document()
+
+
+# Step 2
+Rcpp::compileAttributes()
+
+# Step 3
+devtools::load_all()
+
+# Step 4
+theanswer <- hello()
+print(paste("The answer to the life, the universe and everything is ", theanswer))
+hello()
+
+# Step 5 Check in exist in global env. We want this to be FALSE
+exists("hello", where = globalenv(), inherits = FALSE)
+
+# Step 6. So far everything goes well. We can use check command
+#   More extensive check if all piece work together
+devtools::check()
+
+# Warning: Missing license
+# This will edit your DESCRIPTION file (we might edit/remove later)
+usethis::use_mit_license()
+# and check again.
+devtools::check()
+
+
+# Warning: Missing documentation add the following lines at the top of the hello.R.
+# Note: Roxygen is very particular, be very accurate.
+
+#' hello
+#'
+#' Multiplies a number by two using a C++ backend.
+#'
+#' @param x A numeric value.
+#' @return The value of `x * 2`.
+#'@export
+
+devtools::document()
+devtools::check()
+# Note: adding examples can be challenging.
+
+# STEP 7. Test documentation
+?plot.deposit_dataset
+
+# STEP 8
+devtools::install(build_vignettes = TRUE)
+
+# STEP 9
+##############################
+# open a new session and test
+############################
+library(Tut3A)
+hello()
+
+# STEP 10. Adding some unit-tests (more about this later)
+use_testthat()
+# First try test:
+test_file("./tests/testthat/test_new_deposit_dataset.R")
+
+
+# Formal you automize this.
+# Create a new R file in tests/testhat folder
+# The name of this file must be: "test-helloword.R
+# Add the lines we used before and run command:
+test()
+
+
+# Step 11. Vignettes this will create the vignettes.
+usethis::use_vignette("Introduction_depositWatch")

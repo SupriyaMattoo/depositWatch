@@ -1,0 +1,69 @@
+library(depositWatch)
+
+
+transactions <- read.csv("D:/EMBA/DATA501/Package/Deposits.csv", stringsAsFactors = FALSE)
+
+
+#colnames(transactions) <- c("customer_id", "date", "amount")
+
+# Load the dataset from your package data folder (if not already loaded)
+load("data/transactions.rda")
+
+# Convert date column to Date class
+transactions$date <- as.Date(transactions$date, format = "%d-%m-%Y")
+
+# Save it back to .rda in the data folder for your package
+save(transactions, file = "data/transactions.rda")
+
+str(depositWatch::transactions)
+
+
+
+head(transactions)
+
+ds <- new_deposit_dataset(transactions)
+
+ds <- detect_anomalies(ds)
+
+ds
+
+
+detect_anomalies(ds)
+summary(ds)
+ds$results
+new_ds <- detect_anomalies(ds)
+new_ds
+ds2 <- summary(new_ds,excel_path = "anomaly_summary.xlsx")
+print(ds2)
+
+class(ds1)
+class(ds)
+class(new_ds)
+
+plot(ds)
+head(new_ds)
+
+# NEED TO FIX FREQUENCY PART, FLAG both not coming - Done
+# Add test to check the date format and amount is numeric - Done
+# Also missing data or negative?
+# Will it work with any dataset user provides ? - Try with chr customer_id - Also what if all the data is blank
+
+
+load("data/transactions.rda")
+ls()
+str(transactions)
+transactions
+
+
+save(ds1, file = "D:/EMBA/DATA501/Assignment2/ds1.rda")
+
+
+browseVignettes("depositWatch")
+
+remove.packages("depositWatch")
+
+devtools::install_github("SupriyaMattoo/Assignment2")
+library(Assignment2)
+ds1
+plot(ds1)
+?summary.deposit_dataset
