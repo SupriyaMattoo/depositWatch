@@ -1,25 +1,31 @@
 
-
-#' Summarize a deposit dataset
+#' Summarize anomalies in a deposit dataset
 #'
-#' Provides a tabular summary of anomalies detected in a \code{deposit_dataset}
-#' object. By default, the summary is printed to the console. Optionally,
-#' results can be exported to an Excel file.
+#' Provides two levels of anomaly summaries from a \code{deposit_dataset} object:
+#' (1) a monthly-level summary per customer, and (2) a daily-level table of flagged transactions.
+#' By default, the function prints the top \code{n} rows from each summary to the console.
+#' Optionally, only the monthly summary can be exported to Excel.
 #'
 #' @param obj An object of class \code{deposit_dataset}, typically returned by
 #'   \code{\link{detect_anomalies}}.
-#' @param excel_path Optional file path (character). If provided, the summary
-#'   table will be exported as an Excel file at the specified location.
-#' @param ... Additional arguments (ignored for this method).
+#' @param n Integer. Number of rows to display from each summary table. Defaults to 10.
+#' @param excel_path Optional character string specifying a directory path.
+#'   If provided, only the monthly summary (\code{obj$results}) will be exported
+#'   as an Excel file named \code{"results.xlsx"} in that directory.
+#' @param ... Additional arguments (currently ignored).
 #'
-#' @return Invisibly returns the summary results data frame. Prints the results
-#'   to the console, and optionally writes them to Excel if \code{excel_path}
-#'   is supplied.
+#' @return Invisibly returns the summary data frame (\code{obj$results}).
+#'   Prints the top \code{n} rows of both the monthly summary and the daily flagged data
+#'   to the console. The daily-level flagged transactions remain available within R
+#'   for further analysis but are not exported due to potential dataset size.
 #'
 #' @details
-#' This method is intended to give a quick overview of anomalies per customer
-#' and per month. The exported Excel file (if requested) can be used for
-#' further manual inspection or sharing.
+#' The summary method provides a concise overview of anomalies detected in the dataset:
+#' \itemize{
+#'   \item \strong{Monthly summary} — Aggregates anomalies by customer and month, suitable for management reporting or export.
+#'   \item \strong{Daily flagged data} — Lists all individual transactions identified as anomalous; retained within R for deeper analysis.
+#' }
+#' When \code{excel_path} is supplied, only the monthly summary is exported for convenience and scalability reasons.
 #'
 #' @examples
 #' transactions <- data.frame(
@@ -30,25 +36,31 @@
 #'
 #' ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thresh = 2)
 #' ds <- detect_anomalies(ds)
-#' summary(ds)                        # prints results to console
-#' # summary(ds, excel_path = "anomalies.xlsx")  # exports to Excel
+#' summary(ds)  # Prints top 10 results from both summaries
+#' # summary(ds, excel_path = "D:/Results")  # Exports only monthly summary
 #'
 #' @seealso \code{\link{new_deposit_dataset}}, \code{\link{detect_anomalies}}
 #'
 #' @importFrom openxlsx write.xlsx
 #' @export
 #' @method summary deposit_dataset
-summary.deposit_dataset <- function(obj, excel_path = NULL) {
+summary.deposit_dataset <- function(obj, n=10, excel_path = NULL) {
   if (is.null(obj$results)) stop("Run detect_anomalies() first.")
 
-  print(obj$results)
+  print(utils::head(obj$results, n))
+  
+  print(utils::head(obj$flagged_data, n))
 
   # Export to Excel if path is provided
   if (!is.null(excel_path)) {
     if (!requireNamespace("openxlsx", quietly = TRUE)) {
       stop("Package 'openxlsx' required for Excel export. Please install it first.")
     }
-    openxlsx::write.xlsx(obj$results, file = excel_path)
+    results_file <- file.path(excel_path, "results.xlsx")
+    flagged_file <- file.path(excel_path, "flagged_data.xlsx")
+    
+    openxlsx::write.xlsx(obj$results, results_file, overwrite = TRUE)
+    #openxlsx::write.xlsx(obj$flagged_data, flagged_file, overwrite = TRUE)
     message("Results exported to Excel: ", excel_path)
   }
 }

@@ -4,7 +4,7 @@
 \alias{summary.deposit_dataset}
 \title{Summarize a deposit dataset}
 \usage{
-\method{summary}{deposit_dataset}(obj, excel_path = NULL)
+\method{summary}{deposit_dataset}(obj, n = 10, excel_path = NULL)
 }
 \arguments{
 \item{obj}{An object of class \code{deposit_dataset}, typically returned by
@@ -21,8 +21,8 @@ to the console, and optionally writes them to Excel if \code{excel_path}
 is supplied.
 }
 \description{
-Provides a tabular summary of anomalies detected in a \code{deposit_dataset}
-object. By default, the summary is printed to the console. Optionally,
+Provides two summaries of anomalies detected in a \code{deposit_dataset}
+object; grouped at monthly level for each customer or grouped at Daily level and  By default, the summary is printed to the console. Optionally,
 results can be exported to an Excel file.
 }
 \details{
@@ -39,8 +39,8 @@ transactions <- data.frame(
 
 ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thresh = 2)
 ds <- detect_anomalies(ds)
-summary(ds)                        # prints results to console
-# summary(ds, excel_path = "anomalies.xlsx")  # exports to Excel
+summary(ds)                        # prints top 10 results to console
+# summary(ds, excel_path = "D:/Results")  # exports to Excel
 
 }
 \seealso{

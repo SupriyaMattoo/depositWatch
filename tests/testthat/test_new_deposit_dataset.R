@@ -51,6 +51,44 @@ test_that("new_deposit_dataset() fails when required columns are missing", {
 })
 
 
+test_that("rows with missing values are removed with a warning", {
+  # Create a sample data frame with a missing amount
+  df_missing <- data.frame(
+    customer_id = c("C1", "C2", "C3"),
+    date = as.Date(c("2025-10-17", "2025-10-17", "2025-10-17")),
+    amount = c(100, NA, 150)
+  )
+  
+  # Expect a warning about removed rows
+  expect_warning(
+    obj <- new_deposit_dataset(df_missing),
+    regexp = "1 row(s) with missing values were removed from the transactions dataset."
+  )
+  
+  # Check that only 2 rows remain (the NA row is gone)
+  expect_equal(nrow(obj$transactions), 2)
+  
+  # Check that the remaining customers are C1 and C3
+  expect_equal(obj$transactions$customer_id, c("C1", "C3"))
+})
+
+test_that("negative deposit amounts are removed with a warning", {
+  df_neg <- data.frame(
+    customer_id = c("C1", "C2"),
+    date = as.Date(c("2025-10-17", "2025-10-17")),
+    amount = c(100, -50)
+  )
+  
+  expect_warning(
+    obj <- new_deposit_dataset(df_neg),
+    regexp = "1 row(s) with negative deposit amounts were removed from the transactions dataset."
+  )
+  
+  expect_equal(nrow(obj$transactions), 1)
+  expect_equal(obj$transactions$customer_id, "C1")
+})
+
+
 test_that("new_deposit_dataset() fails when date is not of Date class", {
   df_notdate <- data.frame(
     customer_id = rep(c("C1", "C2"), each = 3),

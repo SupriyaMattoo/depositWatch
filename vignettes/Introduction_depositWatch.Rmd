@@ -30,6 +30,24 @@ library(depositWatch)
 •	Provide clear output for reporting, visualization, and further analysis  
 •	Maintain scalability and efficiency for large datasets
 
+### Understanding window_size and Z-score thresholds
+#### window_size: 
+This is the rolling window used to calculate moving statistics (mean and standard deviation) for each customer. The default is 30, which roughly corresponds to one month of behavior. You can adjust it depending on your use case:
+
+• 60 → two months  
+
+• 90 → three months  
+
+• The larger the window, the smoother the rolling statistics, but it may be slower to detect sudden changes.  
+
+#### z_thresh / freq_thresh: 
+These thresholds determine how “extreme” a transaction must be to be considered anomalous. They are expressed as Z-scores, which measure how many standard deviations a value is from the rolling mean. In a normal distribution:
+
+• Z = 2 → ~95% of normal behavior is captured, more sensitive to anomalies  
+
+• Z = 3 → ~99% of normal behavior is captured, stricter detection
+Lower values detect more anomalies (higher sensitivity), while higher values reduce false positives (higher specificity).  
+
 
 ### Package Workflow / Pipeline
 A high-level workflow diagram or step-by-step narrative of how the functions interact:
@@ -72,10 +90,10 @@ This function uses C++ function rollingStats to calculate rolling metrics, rolli
 ds <- detect_anomalies(ds)
 ```
 
-3. summary(): This method provides a concise view of the anomaly detection results stored in a deposit_dataset object after running detect_anomalies(). It prints a per-customer summary that shows the number of times each customer was flagged and the types of anomalies detected. Additionally, the method allows the user to export this summary to an Excel file by specifying a file path. The export leverages the openxlsx package, enabling integration with reporting or compliance workflows. By separating computation (detect_anomalies()) from presentation (summary()), the design ensures that users can quickly access the results, inspect anomaly patterns, and optionally generate external reports, all without recalculating the rolling statistics or flags.
+3. summary(): This method provides a concise view of the anomaly detection results stored in a deposit_dataset object after running detect_anomalies(). It prints two summaries to the console: a monthly summary showing the number of anomalies per customer and a daily-level table of flagged transactions. The monthly summary can optionally be exported to an Excel file using the openxlsx package, supporting reporting or compliance workflows.The daily-level flagged data is retained within R for detailed analysis but is not exported due to potential dataset size. By separating computation (detect_anomalies()) from presentation (summary()), the design ensures that users can quickly access the results, inspect anomaly patterns, and optionally generate external reports, all without recalculating the rolling statistics or flags.
 
 ```{r Summary}
-ds1 <- summary(ds,excel_path = "anomaly_summary.xlsx")
+ds1 <- summary(ds,excel_path = "D:/Results")
 ```
 
 4. plot(): Creates two monthly time-series visualizations:  
@@ -90,3 +108,56 @@ plot(ds)
 ```{r pressure, echo=FALSE}
 plot(ds)
 ```
+
+
+
+### Interpreting Results
+After running detect_anomalies() and summary(), the deposit_dataset object contains detailed information about flagged transactions. Understanding these outputs helps prioritize investigations and interpret customer behavior.
+
+#### 1. results Table
+The results element of the deposit_dataset object contains the following columns per customer per day:
+
+customer_id: Identifier of the customer  
+
+date: The day of the transaction(s)  
+
+total_amount: Sum of transactions on that day  
+
+num_transactions: Number of transactions on that day  
+
+amount_flag: Flag indicating if the total amount exceeds the rolling mean by z_thresh  
+
+freq_flag: Flag indicating if the number of transactions exceeds the frequency threshold freq_thresh  
+
+combined_flag: If both amount_flag and freq_flag are triggered, marked as "Both"  
+
+#### 2. Summary Output
+
+The summary() function provides a high-level view:  
+
+total_days_flagged: Number of days a customer had any anomaly  
+
+amount_only: Days flagged for unusual amounts  
+
+frequency_only: Days flagged for unusual transaction frequency   
+
+both: Days flagged for both amount and frequency  
+
+This table allows users to quickly identify customers with unusual activity patterns and the nature of the anomalies.  
+
+#### 3. Flag Interpretation
+
+Amount anomalies indicate unusually large or small deposits compared to a customer’s rolling average.  
+
+Frequency anomalies indicate an unusual number of transactions, even if the amounts are typical.  
+
+Both flags highlight days where both behaviors are unusual, often warranting closer inspection.  
+
+#### 4. Practical Tips
+
+Use lower Z-score thresholds to detect subtle anomalies, higher thresholds to focus on extreme deviations.  
+
+Longer rolling windows smooth out short-term fluctuations but may delay detection of sudden changes.  
+
+The combination of amount and frequency flags can help differentiate between one-off spikes and sustained changes in behavior.  
+

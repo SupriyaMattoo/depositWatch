@@ -11,11 +11,15 @@ NULL
 #' @param transactions A data frame of transaction records, with required columns:
 #'   \code{customer_id}, \code{date}, and \code{amount}.
 #' @param window_size Integer. Rolling window size for calculating moving statistics
-#'   (default = 30).
+#'   Default is 30, representing roughly a one-month period to track changes in
+#'   transaction behavior. You can adjust this to a longer period (e.g., 60 for two months,
+#'   90 for three months) depending on your use case.
 #' @param z_thresh Numeric. Z-score threshold for identifying anomalous transaction
-#'   amounts (default = 3).
+#'   amounts (default = 3). In a normal distribution, a Z-score of 2 captures about 95% 
+#'   of values, while a Z-score of 3 captures about 99% of values. Lower values make 
+#'   anomaly detection more sensitive, higher values make it stricter.
 #' @param freq_thresh Numeric. Z-score threshold for identifying anomalous transaction
-#'   frequencies (default = 3).
+#'   frequencies (default = 3). Same interpretation as \code{z_thresh}.
 #'
 #' @return An object of class \code{deposit_dataset}, containing:
 #' \itemize{
@@ -51,6 +55,19 @@ new_deposit_dataset <- function(transactions,
     stop("Missing required column(s): ", paste(missing_cols, collapse = ", "), call. = FALSE)
   }
 
+  # ---- Handle missing values ----
+  na_rows <- sum(!stats::complete.cases(transactions[, required_cols]))
+  if (na_rows > 0) {
+    transactions <- transactions[stats::complete.cases(transactions[, required_cols]), ]
+    warning(sprintf("%d row(s) with missing values were removed from the transactions dataset.", na_rows))
+  }
+  
+  # ---- Handle negative amounts ----
+  neg_rows <- sum(transactions$amount < 0, na.rm = TRUE)
+  if (neg_rows > 0) {
+    transactions <- transactions[transactions$amount >= 0, ]
+    warning(sprintf("%d row(s) with negative deposit amounts were removed from the transactions dataset.", neg_rows))
+  }
 
   # Check that date column is Date class
   if (!inherits(transactions$date, "Date")) {

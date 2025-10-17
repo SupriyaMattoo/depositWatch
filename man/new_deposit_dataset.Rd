@@ -16,13 +16,17 @@ new_deposit_dataset(
 \code{customer_id}, \code{date}, and \code{amount}.}
 
 \item{window_size}{Integer. Rolling window size for calculating moving statistics
-(default = 30).}
+Default is 30, representing roughly a one-month period to track changes in
+transaction behavior. You can adjust this to a longer period (e.g., 60 for two months,
+90 for three months) depending on your use case.}
 
 \item{z_thresh}{Numeric. Z-score threshold for identifying anomalous transaction
-amounts (default = 3).}
+amounts (default = 3). In a normal distribution, a Z-score of 2 captures about 95\%
+of values, while a Z-score of 3 captures about 99\% of values. Lower values make
+anomaly detection more sensitive, higher values make it stricter.}
 
 \item{freq_thresh}{Numeric. Z-score threshold for identifying anomalous transaction
-frequencies (default = 3).}
+frequencies (default = 3). Same interpretation as \code{z_thresh}.}
 }
 \value{
 An object of class \code{deposit_dataset}, containing:

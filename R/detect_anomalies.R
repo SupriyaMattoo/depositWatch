@@ -100,7 +100,8 @@ detect_anomalies.deposit_dataset <- function(obj) {
   # Store results in new object
   new_obj <- obj
   new_obj$results <- dplyr::filter(results, flag_count > 0) # keep only rows where there was at least one flag
-
+  new_obj$flagged_data <- flagged_data
+  
   return(new_obj)
 }
 
