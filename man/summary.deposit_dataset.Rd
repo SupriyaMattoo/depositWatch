@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary.R
 \name{summary.deposit_dataset}
 \alias{summary.deposit_dataset}
-\title{Summarize a deposit dataset}
+\title{Summarize anomalies in a deposit dataset}
 \usage{
 \method{summary}{deposit_dataset}(obj, n = 10, excel_path = NULL)
 }
@@ -10,25 +10,38 @@
 \item{obj}{An object of class \code{deposit_dataset}, typically returned by
 \code{\link{detect_anomalies}}.}
 
-\item{excel_path}{Optional file path (character). If provided, the summary
-table will be exported as an Excel file at the specified location.}
+\item{n}{Integer. Number of rows to display from each summary table. Defaults to 10.}
 
-\item{...}{Additional arguments (ignored for this method).}
+\item{excel_path}{Optional character string specifying a directory path.
+If provided, only the monthly summary (\code{obj$results}) will be exported
+as an Excel file named \code{"results.xlsx"} in that directory.}
+
+\item{...}{Additional arguments (currently ignored).}
 }
 \value{
-Invisibly returns the summary results data frame. Prints the results
-to the console, and optionally writes them to Excel if \code{excel_path}
-is supplied.
+Invisibly returns the summary data frame (\code{obj$results}).
+Prints the top \code{n} rows of both the monthly summary and the daily flagged data
+to the console. The daily-level flagged transactions remain available within R
+for further analysis but are not exported due to potential dataset size.
 }
 \description{
-Provides two summaries of anomalies detected in a \code{deposit_dataset}
-object; grouped at monthly level for each customer or grouped at Daily level and  By default, the summary is printed to the console. Optionally,
-results can be exported to an Excel file.
+Provides two levels of anomaly summaries from a \code{deposit_dataset} object:
+(1) a monthly-level summary per customer, and (2) a daily-level table of flagged transactions.
+By default, the function prints the top \code{n} rows from each summary to the console.
+Optionally, only the monthly summary can be exported to Excel.
 }
 \details{
-This method is intended to give a quick overview of anomalies per customer
-and per month. The exported Excel file (if requested) can be used for
-further manual inspection or sharing.
+The summary method provides a concise overview of anomalies detected in the dataset:
+\itemize{
+\item \strong{Monthly summary} — Aggregates anomalies by customer and month, suitable for management reporting or export.
+\item \strong{Daily flagged data} — Lists all individual transactions identified as anomalous; retained within R for deeper analysis.
+}
+
+Note: If your window_size is, say, 30 days, then the first 29 days per customer won’t have enough data points to compute a rolling mean.
+That’s why roll_mean_amt, roll_sd_amt, and z_score_amt are \code{NA}
+
+When \code{excel_path} is supplied, only the monthly summary is exported
+for convenience and scalability reasons.
 }
 \examples{
 transactions <- data.frame(
@@ -39,8 +52,8 @@ transactions <- data.frame(
 
 ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thresh = 2)
 ds <- detect_anomalies(ds)
-summary(ds)                        # prints top 10 results to console
-# summary(ds, excel_path = "D:/Results")  # exports to Excel
+summary(ds)  # Prints top 10 results from both summaries
+# summary(ds, excel_path = "D:/Results")  # Exports only monthly summary
 
 }
 \seealso{

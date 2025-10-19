@@ -105,7 +105,7 @@ o	The number of unique customers who experienced at least one anomaly per calend
 plot(ds)
 ```
 
-```{r pressure, echo=FALSE}
+```{r pressure, fig.width = 7, fig.height = 5, echo=FALSE}
 plot(ds)
 ```
 
@@ -117,47 +117,56 @@ After running detect_anomalies() and summary(), the deposit_dataset object conta
 #### 1. results Table
 The results element of the deposit_dataset object contains the following columns per customer per day:
 
-customer_id: Identifier of the customer  
+•	customer_id: Identifier of the customer  
 
-date: The day of the transaction(s)  
+•	date: The day of the transaction(s)  
 
-total_amount: Sum of transactions on that day  
+•	total_amount: Sum of transactions on that day  
 
-num_transactions: Number of transactions on that day  
+•	num_transactions: Number of transactions on that day  
 
-amount_flag: Flag indicating if the total amount exceeds the rolling mean by z_thresh  
+•	amount_flag: Flag indicating if the total amount exceeds the rolling mean by z_thresh  
 
-freq_flag: Flag indicating if the number of transactions exceeds the frequency threshold freq_thresh  
+•	freq_flag: Flag indicating if the number of transactions exceeds the frequency threshold freq_thresh  
 
-combined_flag: If both amount_flag and freq_flag are triggered, marked as "Both"  
+•	combined_flag: If both amount_flag and freq_flag are triggered, marked as "Both"  
 
-#### 2. Summary Output
+#### 2. summary Output
 
 The summary() function provides a high-level view:  
 
-total_days_flagged: Number of days a customer had any anomaly  
+•	total_days_flagged: Number of days a customer had any anomaly  
 
-amount_only: Days flagged for unusual amounts  
+•	amount_only: Days flagged for unusual amounts  
 
-frequency_only: Days flagged for unusual transaction frequency   
+•	frequency_only: Days flagged for unusual transaction frequency   
 
-both: Days flagged for both amount and frequency  
+•	both: Days flagged for both amount and frequency  
 
-This table allows users to quickly identify customers with unusual activity patterns and the nature of the anomalies.  
+This summary table helps users quickly identify customers with irregular behaviour and understand the type of anomalies detected.  
+  
+For more detailed analysis, users can explore the daily-level data stored in obj$flagged_data.  
+The example below filters out any unflagged rows to focus on valid flagged transactions:  
+
+```{r analysis, eval=FALSE}
+valid_data <- dplyr::filter(obj$flagged_data, !is.na(flag))
+```
+
+
 
 #### 3. Flag Interpretation
 
-Amount anomalies indicate unusually large or small deposits compared to a customer’s rolling average.  
+•	Amount anomalies indicate unusually large or small deposits compared to a customer’s rolling average.  
 
-Frequency anomalies indicate an unusual number of transactions, even if the amounts are typical.  
+•	Frequency anomalies indicate an unusual number of transactions, even if the amounts are typical.  
 
-Both flags highlight days where both behaviors are unusual, often warranting closer inspection.  
+•	Both flags highlight days where both behaviors are unusual, often warranting closer inspection.  
 
-#### 4. Practical Tips
+### Practical Tips
 
-Use lower Z-score thresholds to detect subtle anomalies, higher thresholds to focus on extreme deviations.  
+•	Use lower Z-score thresholds to detect subtle anomalies, higher thresholds to focus on extreme deviations.  
 
-Longer rolling windows smooth out short-term fluctuations but may delay detection of sudden changes.  
+•	Longer rolling windows smooth out short-term fluctuations but may delay detection of sudden changes.  
 
-The combination of amount and frequency flags can help differentiate between one-off spikes and sustained changes in behavior.  
+•	The combination of amount and frequency flags can help differentiate between one-off spikes and sustained changes in behavior.  
 

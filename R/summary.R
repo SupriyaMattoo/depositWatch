@@ -25,7 +25,12 @@
 #'   \item \strong{Monthly summary} — Aggregates anomalies by customer and month, suitable for management reporting or export.
 #'   \item \strong{Daily flagged data} — Lists all individual transactions identified as anomalous; retained within R for deeper analysis.
 #' }
-#' When \code{excel_path} is supplied, only the monthly summary is exported for convenience and scalability reasons.
+#'
+#' Note: If your window_size is, say, 30 days, then the first 29 days per customer won’t have enough data points to compute a rolling mean.
+#' That’s why roll_mean_amt, roll_sd_amt, and z_score_amt are \code{NA} 
+#'
+#' When \code{excel_path} is supplied, only the monthly summary is exported
+#' for convenience and scalability reasons.
 #'
 #' @examples
 #' transactions <- data.frame(
