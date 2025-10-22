@@ -11,8 +11,10 @@
 #' @param n Integer. Number of rows to display from each summary table. Defaults to 10.
 #' @param excel_path Optional character string specifying a directory path.
 #'   If provided, only the monthly summary (\code{obj$results}) will be exported
-#'   as an Excel file named \code{"results.xlsx"} in that directory.
-#' @param ... Additional arguments (currently ignored).
+#'   as an Excel file named \code{"results.xlsx"} in that directory.  
+#' @param csv_path Optional character string specifying a directory path.
+#'   If provided, both monthly summary (\code{obj$results}) and daily flagged data (\code{obj$flagged_data}) will be exported
+#'   as csv files named \code{"results.csv"} and \code{"flagged_data.csv"} in that directory.
 #'
 #' @return Invisibly returns the summary data frame (\code{obj$results}).
 #'   Prints the top \code{n} rows of both the monthly summary and the daily flagged data
@@ -32,6 +34,8 @@
 #' When \code{excel_path} is supplied, only the monthly summary is exported
 #' for convenience and scalability reasons.
 #'
+#' When \code{csv_path} is supplied, both the monthly summary and daily data is exported
+#'
 #' @examples
 #' transactions <- data.frame(
 #'   customer_id = rep(c("C1", "C2"), each = 5),
@@ -43,13 +47,14 @@
 #' ds <- detect_anomalies(ds)
 #' summary(ds)  # Prints top 10 results from both summaries
 #' # summary(ds, excel_path = "D:/Results")  # Exports only monthly summary
-#'
+#' # summary(ds, csv_path = "D:/Results")  # Exports both the monthly summary and daily-level data
+#' 
 #' @seealso \code{\link{new_deposit_dataset}}, \code{\link{detect_anomalies}}
 #'
 #' @importFrom openxlsx write.xlsx
 #' @export
 #' @method summary deposit_dataset
-summary.deposit_dataset <- function(obj, n=10, excel_path = NULL) {
+summary.deposit_dataset <- function(obj, n=10, excel_path = NULL, csv_path = NULL) {
   if (is.null(obj$results)) stop("Run detect_anomalies() first.")
 
   print(utils::head(obj$results, n))
@@ -67,6 +72,16 @@ summary.deposit_dataset <- function(obj, n=10, excel_path = NULL) {
     openxlsx::write.xlsx(obj$results, results_file, overwrite = TRUE)
     #openxlsx::write.xlsx(obj$flagged_data, flagged_file, overwrite = TRUE)
     message("Results exported to Excel: ", excel_path)
+  }
+  
+  # ---- Export to CSV if path is provided ----
+  if (!is.null(csv_path)) {
+    results_csv <- file.path(csv_path, "results.csv")
+    flagged_csv <- file.path(csv_path, "flagged_data.csv")
+    
+    write.csv(obj$results, results_csv, row.names = FALSE)
+    write.csv(obj$flagged_data, flagged_csv, row.names = FALSE)
+    message("Results exported to CSV: ", csv_path)
   }
 }
 

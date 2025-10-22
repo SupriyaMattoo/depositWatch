@@ -4,7 +4,7 @@
 \alias{summary.deposit_dataset}
 \title{Summarize anomalies in a deposit dataset}
 \usage{
-\method{summary}{deposit_dataset}(obj, n = 10, excel_path = NULL)
+\method{summary}{deposit_dataset}(obj, n = 10, excel_path = NULL, csv_path = NULL)
 }
 \arguments{
 \item{obj}{An object of class \code{deposit_dataset}, typically returned by
@@ -16,7 +16,9 @@
 If provided, only the monthly summary (\code{obj$results}) will be exported
 as an Excel file named \code{"results.xlsx"} in that directory.}
 
-\item{...}{Additional arguments (currently ignored).}
+\item{csv_path}{Optional character string specifying a directory path.
+If provided, both monthly summary (\code{obj$results}) and daily flagged data (\code{obj$flagged_data}) will be exported
+as csv files named \code{"results.csv"} and \code{"flagged_data.csv"} in that directory.}
 }
 \value{
 Invisibly returns the summary data frame (\code{obj$results}).
@@ -42,6 +44,8 @@ That’s why roll_mean_amt, roll_sd_amt, and z_score_amt are \code{NA}
 
 When \code{excel_path} is supplied, only the monthly summary is exported
 for convenience and scalability reasons.
+
+When \code{csv_path} is supplied, both the monthly summary and daily data is exported
 }
 \examples{
 transactions <- data.frame(
@@ -54,6 +58,7 @@ ds <- new_deposit_dataset(transactions, window_size = 3, z_thresh = 2, freq_thre
 ds <- detect_anomalies(ds)
 summary(ds)  # Prints top 10 results from both summaries
 # summary(ds, excel_path = "D:/Results")  # Exports only monthly summary
+# summary(ds, csv_path = "D:/Results")  # Exports both the monthly summary and daily-level data
 
 }
 \seealso{

@@ -90,12 +90,16 @@ This function uses C++ function rollingStats to calculate rolling metrics, rolli
 ds <- detect_anomalies(ds)
 ```
 
-3. summary(): This method provides a concise view of the anomaly detection results stored in a deposit_dataset object after running detect_anomalies(). It prints two summaries to the console: a monthly summary showing the number of anomalies per customer and a daily-level table of flagged transactions. The monthly summary can optionally be exported to an Excel file using the openxlsx package, supporting reporting or compliance workflows.The daily-level flagged data is retained within R for detailed analysis but is not exported due to potential dataset size. By separating computation (detect_anomalies()) from presentation (summary()), the design ensures that users can quickly access the results, inspect anomaly patterns, and optionally generate external reports, all without recalculating the rolling statistics or flags.
+3. summary(): This method provides a concise view of the anomaly detection results stored in a deposit_dataset object after running detect_anomalies(). It prints two summaries to the console: a monthly summary showing the number of anomalies per customer and a daily-level table of flagged transactions. The monthly summary can optionally be exported to an Excel file or a csv file.If excel path is provided, only monthly summary is exported and if the csv path is provided, both the datasets are exported.   
+By separating computation (detect_anomalies()) from presentation (summary()), the design ensures that users can quickly access the results, inspect anomaly patterns, and optionally generate external reports, all without recalculating the rolling statistics or flags.
 
 ```{r Summary}
 ds1 <- summary(ds,excel_path = "D:/Results")
 ```
-
+Or
+```{r Summary1, eval=FALSE}
+ds1 <- summary(ds,csv_path = "D:/Results")
+```
 4. plot(): Creates two monthly time-series visualizations:  
 o	The total number of anomalies detected per calendar month.  
 o	The number of unique customers who experienced at least one anomaly per calendar month

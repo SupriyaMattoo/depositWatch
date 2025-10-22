@@ -62,7 +62,7 @@ test_that("rows with missing values are removed with a warning", {
   # Expect a warning about removed rows
   expect_warning(
     obj <- new_deposit_dataset(df_missing),
-    regexp = "1 row(s) with missing values were removed from the transactions dataset."
+    regexp = "row\\(s\\) with missing values were removed from the transactions dataset."
   )
   
   # Check that only 2 rows remain (the NA row is gone)
@@ -81,7 +81,7 @@ test_that("negative deposit amounts are removed with a warning", {
   
   expect_warning(
     obj <- new_deposit_dataset(df_neg),
-    regexp = "1 row(s) with negative deposit amounts were removed from the transactions dataset."
+    regexp = "row\\(s\\) with negative deposit amounts were removed from the transactions dataset."
   )
   
   expect_equal(nrow(obj$transactions), 1)
